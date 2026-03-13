@@ -1,0 +1,205 @@
+#!/usr/bin/env bash
+# Testing framework for bash scripts
+
+TEST_SUCCESS=0
+TEST_FAIL=1
+INVALID_ARGS=2
+
+# assert <clause1> <clause2> <operator?> <message?>
+# assert is the general puropse assert call
+# and all other assert function in this file
+# could be reconstructed with this function
+# in fact most if not all of them are implemented
+# using this function.
+#
+# Arguments:
+#	clause1: The first value
+#	clause2: The second value
+#	operator: the equality operator
+#	message: An optionl message to be printed before exit
+#
+# exits 0, 1 based on the test result
+# or 2 if the args are invalid
+assert() {
+    local c1 c2 op msg
+
+    # Need 2 to 4 args
+    if [[ "$#" -lt 2 || "$#" -gt 4 ]]; then
+        [[ -n "$4" ]] && printf '%s\n' "$4"
+        exit "$INVALID_ARGS"
+    fi
+
+    c1="$1"
+    c2="$2"
+    op="-eq"
+    msg=""
+
+    # 3 args:
+    # if $3 looks like an operator, use it
+    # otherwise treat it as a message
+    if [[ "$#" -eq 3 ]]; then
+        case "$3" in
+            -eq|-ne|-lt|-le|-gt|-ge|=|!=)
+                op="$3"
+                ;;
+            *)
+                msg="$3"
+                ;;
+        esac
+    fi
+
+    # 4 args: operator + message
+    if [[ "$#" -eq 4 ]]; then
+        op="$3"
+        msg="$4"
+    fi
+
+    if test "$c1" "$op" "$c2"; then
+        return "$TEST_SUCCESS"
+    else
+        [[ -n "$msg" ]] && printf '%s\n' "$msg"
+        exit "$TEST_FAIL"
+    fi
+}
+
+
+# assert_eq <value1> <value2> <message?>
+assert_eq() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" "$2" "=" "$3"
+}
+
+# assert_lt <value1> <value2> <message?>
+assert_lt() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" "$2" -lt "$3"
+}
+
+# assert_le <value1> <value2> <message?>
+assert_le() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" "$2" -le "$3"
+}
+
+# assert_gt <value1> <value2> <message?>
+assert_gt() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" "$2" -gt "$3"
+}
+
+# assert_ge <value1> <value2> <message?>
+assert_ge() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" "$2" -ge "$3"
+}
+
+# assert_true <return code> <message>
+assert_true() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" 0 -eq "$2"
+}
+
+# assert_false <return code> <message>
+assert_false() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    assert "$1" 0 -ne "$2"
+}
+
+## File Assertions -----------------------
+
+# assert_exists <path> <message?>
+assert_exists() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -e "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_file <path> <message?>
+assert_file() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -f "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_symlink <path> <message?>
+assert_symlink() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -L "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_socket <path> <message?>
+assert_socket() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -S "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_pipe <path> <message?>
+assert_pipe() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -p "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_writeable <path> <message?>
+assert_writeable() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -w "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_readable <path> <message?>
+assert_readable() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -r "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_executable <path> <message?>
+assert_executable() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -x "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+# assert_directory <path> <message?>
+assert_directory() {
+    if [[ "$#" -lt 1 || "$#" -gt 2 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    [[ -d "$1" ]]
+    assert "$?" 0 -eq "$2"
+}
+
+## ---------------------------------------
