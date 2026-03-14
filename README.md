@@ -13,11 +13,13 @@ Yes long story short if u need to read or write toml in bash here ya go!
 Bellow is the set of features that should be provided, tho not all are currently implemented. 
 If you are intrested in helping implement any of these feel free to contribute.
 
+- [ ] CLI tool
+- [ ] library file to source
 - [ ] Read values from a toml file.
 - [ ] Write values to a toml file.
-- [ ] Check if a table exists in the toml file.
-- [ ] Check if a value is in the toml file.
-- [ ] Check toml file for malformed data.
+- [x] Check if a toml file exists
+- [x] Check if a table exists in the toml file.
+- [x] Check if a key is in the toml file under the desired table.
 
 ## Installation
 
@@ -26,22 +28,26 @@ If you are intrested in helping implement any of these feel free to contribute.
 
 ```
 
+## Return Codes:
 
-## API
+Yikes we hate when something goes wrong. Which is why I try to give different return codes 
+based on the problem. Bellow are all the return codes that can occur when using this library
+or tool. to check the return value of the functions do the following
 
-Below are the api signitures that you have access to call. each of these will return a value to indicate 
-what happened durring execution.
-
+``` bash
+toml_check_file <file>
+local status="$?"
+if [ "$status" -ne "" ]; then
+	local err_str="$(toml_err_to_str $status)"
+	toml_error "$string : $status"
+fi
 ```
-toml read <file> <table> <key>
-toml write <file> <table> <value>
-toml check [--table <table>] <file> 
-toml check [--key <key>] <file>
-toml check [-k <key> -t <table>] <file>
-toml check <file>
-```
 
-Those return values are as follows:
+To me this is a very clean way to write this code. `toml_err_to_str` will echo the string 
+representation of the error to stdout so you need to capture it with `$()`. You could also 
+use bashisms to shorten it but for this guide its better to be verbose. 
+
+Bellow are the codes that can be returned from various functions in the library.
 
 ```
 success			= 0
@@ -50,25 +56,16 @@ no-table		= 2
 no-key			= 3
 write-failed	= 4
 no-file			= 5
+invalid-args	= 6
+read-failed		= 7
 ```
 
-### Toml Read
 
-Used to read the desired key from the given table. If no table/key is found then this command will output nothing.
-the best way to make use of this command is to capture the stdout after it runs. 
+## Using as a CLI
 
-```bash
-local val=$(toml read <file> <table> <value>)
-if [[ ! $? == 0 ]]; then
-	echo "An error occured while reading $?"
-	exit $?
-fi
-echo $val
-```
-
-### Toml write
-
-### Toml Check
+managing toml files from 
 
 
-## Use in other projects.
+## Using as a Library
+
+Want to use this tool in your own scripts as a library? well let me show you how.
