@@ -21,28 +21,25 @@ INVALID_ARGS=2
 # exits 0, 1 based on the test result
 # or 2 if the args are invalid
 assert() {
-    local c1 c2 op msg
-
     if [[ "$#" -lt 2 || "$#" -gt 4 ]]; then
-        exit "$INVALID_ARGS"
+        return "$INVALID_ARGS"
     fi
 
-    c1="$1"
-    c2="$2"
-    op="-eq"
-    msg=""
+    local c1="$1" c2="$2" op="-eq" msg=""
 
     if [[ "$#" -eq 3 ]]; then
         case "$3" in
-            -eq|-ne|-lt|-le|-gt|-ge|=|!=)
-                op="$3"
-                ;;
-            *)
-                msg="$3"
-                ;;
+            -eq|-ne|-lt|-le|-gt|-ge|=|!=) op="$3" ;;
+            *) msg="$3" ;;
         esac
     elif [[ "$#" -eq 4 ]]; then
-        op="$3"
+        case "$3" in
+            -eq|-ne|-lt|-le|-gt|-ge|=|!=) op="$3" ;;
+            *)
+                printf '\e[31m[Failed]:\e[0m invalid operator: %s\n' "$3"
+                exit "$INVALID_ARGS"
+                ;;
+        esac
         msg="$4"
     fi
 
@@ -50,7 +47,7 @@ assert() {
         return "$TEST_SUCCESS"
     fi
 
-    [[ -n "$msg" ]] && printf '%s\n' "$msg"
+    [[ -n "$msg" ]] && printf '\e[31m[Failed]:\e[0m %s\n' "$msg"
     exit "$TEST_FAIL"
 }
 

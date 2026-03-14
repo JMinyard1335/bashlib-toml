@@ -4,7 +4,11 @@
 # be here becaused they are used throughout
 # the project to cut down or repetation.
 
+# SOURCE GUARD DO NOT REMOVE
+if [[ -v TOML_HELPER_SOURCED ]]; then return 0; fi
+TOML_HELPER_SOURCED=1
 
+# GETS LOCATION OF SCRIPT DO NOT REMOVE
 TOML_HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 
@@ -14,19 +18,19 @@ TOML_HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 # generic debugging info.
 
 toml_log() { # generic output 
-    printf "${CYAN}[Toml]:${RESET} %s\n" "$*" >&2
+    printf "\e[36m[Toml]:\e[0m %s\n" "$*" >&2
 }
 
 toml_success() { # Success output
-    printf "${GREEN}[Toml]:${RESET} %s\n" "$*" >&2
+    printf "\e[32m[Toml]:\e[0m %s\n" "$*" >&2
 }
 
 toml_error() { # error output
-    printf "${RED}[Toml]:${RESET} %s\n" "$*" >&2
+    printf "\e[31m[Toml]:\e[0m %s\n" "$*" >&2
 }
 
 toml_warn() { # warning output
-    printf "${YELLOW}[Toml]:${RESET} %s\n" "$*" >&2
+    printf "\e[31m[Toml]:\e[0m %s\n" "$*" >&2
 }
 # --------------------------------------------------------------
 
@@ -39,8 +43,8 @@ toml_warn() { # warning output
 #	6: invalid args
 toml_check_arg_count() {
     [ "$#" -eq 2 ] || {
-	echo "invalid use of 'toml_check_arg_count'"
-	echo "Usage: toml_check_arg_count <arg count> <desired arg count>"
+	toml_error "invalid use of 'toml_check_arg_count'"
+	toml_log "Usage: toml_check_arg_count <arg count> <desired arg count>"
 	return 6
     }
     

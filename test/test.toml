@@ -1,0 +1,22 @@
+# Test toml file
+# Comments should be ignored by the lib
+# tables should be case insensitive
+
+[project]
+project="bashlib-toml"		# Name of project
+author="Jachin Minyard"		# Name of author
+tool="btoml"			# file to put in bin.
+include="btoml.sh"		# file to place in libexec.
+repo="main repo"		# link to repo
+
+
+# Info about the projects layout.
+[dirs]
+lib="lib"	# holds files that will be installed to lib
+man="man"	# dir that holds man pages
+
+[deps]
+bashlib-formatter="repo1"	# A required tool for this script.
+bashlib-installer="repo2"	
+bashlib-test="repo3"
+
