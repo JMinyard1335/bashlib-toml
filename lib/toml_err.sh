@@ -22,17 +22,25 @@ TOML_NO_FILE=5
 TOML_INVALID_ARGS=6
 TOML_READ_FAILED=7
 
+TOML_SUCCESS_STR="Success"
+TOML_ERROR_STR="Error"
+TOML_NO_TABLE_STR="No table found"
+TOML_NO_KEY_STR="No Key found"
+TOML_WRITE_FAILED_STR="Write Failed"
+TOML_READ_FAILED_STR="File read error"
+TOML_NO_FILE_STR="File Not found"
+TOML_INVALID_ARGS_STR="Invalid args"
 
 # maps return codes to a message.
 declare -A toml_err_str=(
-    [0]="Success"
-    [1]="Error"
-    [2]="No table found"
-    [3]="No Key found"
-    [4]="Write Failed"
-    [5]="File Not found"
-    [6]="Invalid args"
-    [7]="File read error"
+    [0]="$TOML_SUCCESS_STR"
+    [1]="$TOML_ERROR_STR"
+    [2]="$TOML_NO_TABLE_STR"
+    [3]="$TOML_NO_KEY_STR"
+    [4]="$TOML_WRITE_FAILED_STR"
+    [5]="$TOML_NO_FILE_STR"
+    [6]="$TOML_INVALID_ARGS_STR"
+    [7]="$TOML_READ_FAILED_STR"
 )
 
 # toml_err_to_str <return code>

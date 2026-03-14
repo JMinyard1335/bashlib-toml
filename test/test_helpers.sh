@@ -142,6 +142,22 @@ assert_false() {
     fi
 }
 
+
+## String Assertions --------------------
+# assert_str_eq <str1> <str2>
+assert_str_eq() {
+    if [[ "$#" -lt 2 || "$#" -gt 3 ]]; then
+        exit "$INVALID_ARGS"
+    fi
+    
+    if [[ "$#" -eq 3 ]]; then
+        assert "$1" "$2" "=" "$3"
+    else
+        assert "$1" "$2" "="
+    fi
+}
+
+
 ## File Assertions -----------------------
 
 assert_exists() {
