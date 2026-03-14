@@ -54,9 +54,9 @@ success			= 0
 error			= 1
 no-table		= 2
 no-key			= 3
-write-failed	= 4
+write-failed		= 4
 no-file			= 5
-invalid-args	= 6
+invalid-args		= 6
 read-failed		= 7
 ```
 
@@ -68,4 +68,7 @@ managing toml files from
 
 ## Using as a Library
 
-Want to use this tool in your own scripts as a library? well let me show you how.
+Want to use this tool in your own scripts as a library? the fastest way is to copy `<project-root>/libexec/bashlib_toml.sh` into your project source it where you need and have fun. 
+The other way is if you want to use the full tool both CLI and Library then the best way is to use my [bashlib-installer]() project to install this project to the system. 
+
+**Fun Fact**: the bashlib-installer uses the bashlib_toml.sh in its code to be able to parse the tool.toml files. 
