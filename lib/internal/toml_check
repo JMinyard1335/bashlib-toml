@@ -2,17 +2,19 @@
 # Used to check various aspects
 # of the toml file (file, table, value)
 
+
 # SOURCE GUARD DO NOT REMOVE
-# SOURCE GUARD DO NOT REMOVE
-if [[ -v TOML_CHECK_SOURCED ]]; then return 0; fi
-TOML_CHECK_SOURCED=1
+if [[ -v _toml_check_sourced ]]; then return 0; fi
+_toml_checked_sourced=1
 
 # refrences where this script is located,
 # useful in sourcing other files from the tools lib.
-TOML_CHECK_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+toml_check_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 # Bring in the rest of the library
-source "$TOML_CHECK_DIR/toml_lib.sh"
+source "${toml_check_dir}/toml_err.bash"
+source "${toml_check_dir}/toml_helpers.bash"
+
 
 # toml_check_file <file>
 # Checks to see if there is a toml file at the given path.

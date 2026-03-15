@@ -1,0 +1,6 @@
+[project]
+name="toml"
+repo="https://github.com/JMinyard1335/Bash-Installer"
+
+[dependencies]
+format="https://github.com/JMinyard1335/Bash-Formatter"

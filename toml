@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+
+toml_path="$(realpath -- "$0")"
+toml_dir="$(dirname -- "$SCRIPT_PATH")"
+toml_name="$(basename -- "$0")"
+
+if [[ -d "$toml_dir/lib" ]]; then
+    TOML_LIB_DIR="$toml_dir/lib"
+elif [[ -d "$HOME/.local/lib/$toml_name" ]]; then
+    TOML_LIB_DIR="$HOME/.local/lib/$toml_name"
+elif [[ -d "/usr/lib/$toml_name" ]]; then
+    TOML_LIB_DIR="/usr/lib/$toml_name"
+else
+    printf '[Error]: Could not locate library directory for %s\n' "$toml_name" >&2
+    exit 1
+fi
+
+
+# Pull in the tool libraries.
+source "$TOML_LIB_DIR/toml_lib.bash"
+
+
+_toml_main_valid_command() {
+    case "$1" in
+        'read'|write|check) return 0 ;;
+        *) return 1 ;;
+    esac
+}
+
+_toml_main_usage() {
+    cat <<EOF
+Usage:
+  installer <command> [args]
+
+Commands:
+  install     Install a tool
+  remove      Remove a tool
+  update      Update a tool from a repo
+  help        Show this help message
+EOF
+}
+
+_toml_main_parse_args() {
+    [[ $# -eq 0 ]] && {
+        _toml_main_usage
+        exit 1
+    }
+
+    case "$1" in
+        -h|--help|help)
+            COMMAND="help"
+            shift
+            ;;
+        *)
+            if _toml_main_valid_command "$1"; then
+                COMMAND="$1"
+                shift
+            else
+                printf '[Error]: unknown command: %s\n' "$1" >&2
+                _toml_main_usage
+                exit 1
+            fi
+            ;;
+    esac
+
+    ARGS=("$@")
+}
+
+
+_toml_main_parse_args "$@"

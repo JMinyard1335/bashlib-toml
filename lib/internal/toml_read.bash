@@ -5,7 +5,7 @@ TOML_READ_SOURCED=1
 
 TOML_READ_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-source "$TOML_READ_DIR"/toml_lib.sh
+source "$TOML_READ_DIR/../toml_lib.bash"
 
 # toml_read_file <file>
 # reads a toml file and sends it to stdout to be captured.

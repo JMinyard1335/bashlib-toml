@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+# CLI wrapper for toml_check library functions.
+
+# SOURCE GUARD FOR LIBRARY LOADING
+if [[ -v TOML_CHECK_CLI_SOURCED ]]; then
+    return 0
+fi
+TOML_CHECK_CLI_SOURCED=1
+
+toml_name="toml"
+TOML_CHECK_CLI_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+
+get_lib_dir(){
+    local toml_dir="$TOML_CHECK_CLI_DIR"
+    if [[ -d "$toml_dir/lib" ]]; then
+	TOML_LIB_DIR="$toml_dir/lib"
+    elif [[ -d "$HOME/.local/lib/$toml_name" ]]; then
+	TOML_LIB_DIR="$HOME/.local/lib/$toml_name"
+    elif [[ -d "/usr/lib/$toml_name" ]]; then
+	TOML_LIB_DIR="/usr/lib/$toml_name"
+    else
+	printf '[Error]: Could not locate library directory for %s\n' "$toml_name" >&2
+	exit 1
+    fi
+}
+
+get_lib_dir
+# bring in your library files
+source "$TOML_LIB_DIR/toml_check.sh"
+source "$TOML_LIB_DIR/toml_err.sh"
+
+toml_check_usage() {
+    cat <<EOF
+Usage:
+  toml-check <command> [args]
+
+Commands:
+  file <file>                 Check that a TOML file exists and is valid
+  table <file> <table>        Check that a table exists
+  key <file> <table> <key>    Check that a key exists under a table
+  help                        Show this help message
+
+Examples:
+  toml-check file config.toml
+  toml-check table config.toml project
+  toml-check key config.toml project repo
+EOF
+}
+
+toml_check_cli_file() {
+    if [[ "$#" -ne 1 ]]; then
+        echo "toml-check file: expected 1 argument"
+        toml_check_usage
+        return 1
+    fi
+
+    toml_check_file "$1"
+    return "$?"
+}
+
+toml_check_cli_table() {
+    if [[ "$#" -ne 2 ]]; then
+        echo "toml-check table: expected 2 arguments"
+        toml_check_usage
+        return 1
+    fi
+
+    toml_check_table "$1" "$2"
+    return "$?"
+}
+
+toml_check_cli_key() {
+    if [[ "$#" -ne 3 ]]; then
+        echo "toml-check key: expected 3 arguments"
+        toml_check_usage
+        return 1
+    fi
+
+    toml_check_key "$1" "$2" "$3"
+    return "$?"
+}
+
+main() {
+    local cmd="" status=""
+
+    if [[ "$#" -lt 1 ]]; then
+        toml_check_usage
+        return 1
+    fi
+
+    cmd="$1"
+    shift
+
+    case "$cmd" in
+        file)
+            toml_check_cli_file "$@"
+            status="$?"
+            ;;
+        table)
+            toml_check_cli_table "$@"
+            status="$?"
+            ;;
+        key)
+            toml_check_cli_key "$@"
+            status="$?"
+            ;;
+        help|-h|--help)
+            toml_check_usage
+            return 0
+            ;;
+        *)
+            echo "Unknown command: $cmd"
+            toml_check_usage
+            return 1
+            ;;
+    esac
+
+    if [[ "$status" -eq 0 ]]; then
+        echo "Check passed"
+    else
+        echo "Check failed: $(toml_err_to_str "$status")"
+    fi
+
+    return "$status"
+}
+
+# only run main when executed, not sourced
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    main "$@"
+fi
