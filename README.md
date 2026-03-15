@@ -15,7 +15,7 @@ If you are intrested in helping implement any of these feel free to contribute.
 
 - [ ] CLI tool
 - [ ] library file to source
-- [ ] Read values from a toml file.
+- [x] Read files, tables, key value pairs, from a toml file.
 - [ ] Write values to a toml file.
 - [x] Check if a toml file exists
 - [x] Check if a table exists in the toml file.
@@ -70,5 +70,3 @@ managing toml files from
 
 Want to use this tool in your own scripts as a library? the fastest way is to copy `<project-root>/libexec/bashlib_toml.sh` into your project source it where you need and have fun. 
 The other way is if you want to use the full tool both CLI and Library then the best way is to use my [bashlib-installer]() project to install this project to the system. 
-
-**Fun Fact**: the bashlib-installer uses the bashlib_toml.sh in its code to be able to parse the tool.toml files. 
