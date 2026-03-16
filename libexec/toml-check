@@ -2,32 +2,27 @@
 # CLI wrapper for toml_check library functions.
 
 # SOURCE GUARD FOR LIBRARY LOADING
-if [[ -v TOML_CHECK_CLI_SOURCED ]]; then
+if [[ -v toml_cli_check_sourced ]]; then
     return 0
 fi
-TOML_CHECK_CLI_SOURCED=1
+toml_cli_check_sourced=1
 
-toml_name="toml"
-TOML_CHECK_CLI_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+# Name of the main tool
+toml_tool_name="toml"
+toml_cli_check_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+toml_bin_dir=""
+toml_lib_dir=""
+toml_libexec_dir=""
 
-get_lib_dir(){
-    local toml_dir="$TOML_CHECK_CLI_DIR"
-    if [[ -d "$toml_dir/lib" ]]; then
-	TOML_LIB_DIR="$toml_dir/lib"
-    elif [[ -d "$HOME/.local/lib/$toml_name" ]]; then
-	TOML_LIB_DIR="$HOME/.local/lib/$toml_name"
-    elif [[ -d "/usr/lib/$toml_name" ]]; then
-	TOML_LIB_DIR="/usr/lib/$toml_name"
-    else
-	printf '[Error]: Could not locate library directory for %s\n' "$toml_name" >&2
-	exit 1
-    fi
-}
+if [ "$toml_cli_check_dir" = "$HOME/.local/libexe/$toml_tool_name/" ]; then
+    echo ""
+elif [ "$toml_cli_check_dir" = "/usr/libexec/$toml_tool_name/" ]; then
+     echo ""
+else
+    toml_error
+fi
 
-get_lib_dir
-# bring in your library files
-source "$TOML_LIB_DIR/toml_check.sh"
-source "$TOML_LIB_DIR/toml_err.sh"
+
 
 toml_check_usage() {
     cat <<EOF
