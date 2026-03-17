@@ -33,6 +33,7 @@ fi
 
 # Pull in the tool libraries.
 source "${toml_tool_lib_dir}/internal/toml_err.bash"
+source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
 
 ## and that is how you can source the files for tools that will rely on other files elsewhere.
 ## If there is a better way id be happy to know. 
@@ -42,13 +43,18 @@ toml_command=""			# The command that will be run.
 
 _toml_main_valid_command() {
     case "$1" in
-        'read'|write|check) return 0 ;;
+        read|check|install|remove|update) return 0 ;;
         *) return 1 ;;
     esac
 }
 
 _toml_main_usage() {
     cat <<EOF
+
+Description:
+  Used to read and check data In a toml file. There were plans
+  to also add a write but just open a text editor.
+
 Usage:
   installer <command> [args]
 
@@ -59,7 +65,6 @@ Commands:
   help				Show this help message
   check				Used to check for info in a toml file.
   read				Used to pull info from a toml file.
-  write				Used to write info to the toml file.	
 EOF
 }
 
@@ -89,12 +94,71 @@ _toml_main_parse_args() {
     ARGS=("$@")
 }
 
+# Checks to see if my installer command is installed.
+# all install, update and remove logic will be regliated
+# to the installer.
+toml_cli_check_for_installer() {
+    local rc="$(which installer)"
+    if [[ -z "$rc" ]]; then
+	return 1
+    fi
+    return 0
+}
 
-_toml_main_parse_args "$@"
+toml_cli_install() {
+    if ! toml_cli_check_for_installer; then
+	toml_error "Installer not found!"
+	echo "My installer is need for this feature to work. It can be found over at:"
+	echo -e "\t\e[36mhttps://github.com/JMinyard1335/Bash-Installer\e[0m"
+	echo "It will handle all the installations, updates, and removal of my tools."
+	echo "If you want an option to just install it from the CLI go to github check for an issue"
+	echo "if and only if there is not an issue and you dont see it in the change logs then open one."
+	exit 1
+    fi
 
-case "$COMMAND" in
-    "check") bash "${toml_tool_libexec_dir}/toml_check" "${ARGS[@]}";;
-    "read") bash "${toml_tool_libexec_dir}/toml_read" "${ARGS[@]}";;
-    "write") bash "${toml_tool_libexec_dir}/toml_write" "${ARGS[@]}";;
-    *) toml_error "Unknown command read please try again with --help";;
-esac
+    installer install "$toml_tool_bin_dir"
+}
+
+toml_cli_update() {
+    if ! toml_cli_check_for_installer; then
+	toml_error "Installer not found!"
+	echo "My installer is need for this feature to work. It can be found over at:"
+	echo -e "\t\e[36mhttps://github.com/JMinyard1335/Bash-Installer\e[0m"
+	echo "It will handle all the installations, updates, and removal of my tools."
+	echo "If you want an option to just install it from the CLI go to github check for an issue"
+	echo "if and only if there is not an issue and you dont see it in the change logs then open one."
+	exit 1
+    fi
+
+    installer  update "$toml_tool_name"
+}
+
+toml_cli_remove() {
+    if ! toml_cli_check_for_installer; then
+	toml_error "Installer not found!"
+	echo "My installer is need for this feature to work. It can be found over at:"
+	echo -e "\t\e[36mhttps://github.com/JMinyard1335/Bash-Installer\e[0m"
+	echo "It will handle all the installations, updates, and removal of my tools."
+	echo "If you want an option to just install it from the CLI go to github check for an issue"
+	echo "if and only if there is not an issue and you dont see it in the change logs then open one."
+	exit 1
+    fi
+
+    installer  remove "$toml_tool_name"
+}
+
+toml_cli_main() {
+
+    _toml_main_parse_args "$@"
+    case "$COMMAND" in
+	"check") bash "${toml_tool_libexec_dir}/toml_check" "${ARGS[@]}";;
+	"read") bash "${toml_tool_libexec_dir}/toml_read" "${ARGS[@]}";;
+	"install")  toml_cli_install;;
+	"update") toml_cli_update;;
+	"remove") toml_cli_remove;;
+	*) toml_error "Unknown command read please try again with --help";;
+    esac
+    
+}
+
+toml_cli_main "$@"
