@@ -14,12 +14,10 @@ Bellow is the set of features that should be provided, tho not all are currently
 If you are intrested in helping implement any of these feel free to contribute.
 
 - [ ] CLI tool
-- [ ] library file to source
+- [] library file to source
 - [x] Read files, tables, key value pairs, from a toml file.
 - [ ] Write values to a toml file.
-- [x] Check if a toml file exists
-- [x] Check if a table exists in the toml file.
-- [x] Check if a key is in the toml file under the desired table.
+- [x] Check info about a toml file without returning data.
 
 ## Installation
 
@@ -63,8 +61,35 @@ read-failed		= 7
 
 ## Using as a CLI
 
-managing toml files from 
+This tool has the ability to run from the command line and return data/feedback directly to stdout/stderr. 
+To use the command line tool after installation in the command line type the following:
 
+``` bash
+toml help
+```
+
+This will bring up a generic help menu to get you started with its capabilities.  If you would like to simply test
+out the tool without preforming an install you can run it as follows:
+
+``` bash
+cd <project directory>
+./toml help
+```
+
+and as long as you run it from that directory with `./toml`it should work the same. Feel free to even try out some of 
+its features on its tool.toml (I AM NOT RESPONSIBLE FOR YOU DELETING IMPORTANT INFO IN tool.toml). 
+
+### API
+
+``` bash
+toml update [opts] <args>
+toml remove [opts] <args>
+
+toml read [opts] <args>
+toml write [opts] <args>
+toml check [opts] <args>
+
+```
 
 ## Using as a Library
 

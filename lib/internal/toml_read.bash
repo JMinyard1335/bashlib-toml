@@ -48,7 +48,7 @@ toml_read_table () {
     toml_check_table "$file" "$table"
     status="$?"
     if [ "$status" -ne "$TOML_SUCCESS" ]; then
-	toml_error "Invalid toml file"
+	toml_error "Table Not found"
 	return "$TOML_NO_TABLE"
     fi
 
@@ -110,6 +110,7 @@ toml_read_table () {
         return "$TOML_SUCCESS"
     fi
 
+    toml_error "Table Not Found"
     return "$TOML_NO_TABLE"
 }
 
@@ -137,7 +138,7 @@ toml_read_key() {
     toml_check_table "$file" "$table"
     status="$?"
     if [ "$status" -ne "$TOML_SUCCESS" ]; then
-	toml_error "Invalid toml file"
+	toml_error "Table Not found"
 	return "$TOML_NO_TABLE"
     fi
 
@@ -186,8 +187,9 @@ toml_read_key() {
         END {
             if (!found) exit 1
         }
-	' "$file" && return "$TOML_SUCCESS"
+	' "$file" && return "$TOML_SUCCESS";
 
+    toml_error "Key Not Found"
     return "$TOML_READ_FAILED"
 }
 

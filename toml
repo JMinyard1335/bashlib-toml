@@ -1,24 +1,44 @@
 #!/usr/bin/env bash
 
-toml_path="$(realpath -- "$0")"
-toml_dir="$(dirname -- "$SCRIPT_PATH")"
-toml_name="$(basename -- "$0")"
+## DO NOT REMOVE THE FOLLOWING SECTION
+## READ IT UNDERSTAND IT FEEL IT IN YOUR BONES.
+##
+## The following section is used to determine how to source in the rest of
+## the project. It does this by looking at its location and using that info to find its
+## libexec/ and lib/ folder. It warns the user if no (lib, libexec) dirs are found. if the
+## user tries to source something with these and they do not exist it will fail.
 
-if [[ -d "$toml_dir/lib" ]]; then
-    TOML_LIB_DIR="$toml_dir/lib"
-elif [[ -d "$HOME/.local/lib/$toml_name" ]]; then
-    TOML_LIB_DIR="$HOME/.local/lib/$toml_name"
-elif [[ -d "/usr/lib/$toml_name" ]]; then
-    TOML_LIB_DIR="/usr/lib/$toml_name"
-else
-    printf '[Error]: Could not locate library directory for %s\n' "$toml_name" >&2
-    exit 1
+toml_tool_path="$(realpath -- "$0")"						# Path to tool script including the script
+toml_tool_bin_dir="$(dirname -- "$toml_tool_path")"		# Path to tool script minus the script.
+toml_tool_name="$(basename -- "$0")"					# the name of the tool you just executed.
+toml_tool_lib_dir=""										# Path to lib/ dir based off tool location
+toml_tool_libexec_dir=""									# Path to libexec/ dir based off tool location
+
+if [[ "${toml_tool_path}" = "${HOME}/.local/bin/${toml_tool_name}" ]]; then		# Checks locally 
+    [[ -d "${HOME/}.local/lib/${toml_tool_name}" ]]  && toml_tool_lib_dir="${HOME}/.local/lib/${toml_tool_name}";
+    [[ -d "${HOME}/.local/libexec/${toml_tool_name}" ]]  && toml_tool_libexec_dir="${HOME}/.local/libexec/${toml_tool_name}";
+
+elif [[ "$toml_tool_bin_dir" = "/usr/bin/" ]]; then    # Checks globally.
+    [[ -d "/usr/lib/${toml_tool_name}" ]]  && toml_tool_lib_dir="/usr/lib/$toml_tool_name";
+    [[ -d "/usr/libexec/${toml_tool_name}" ]]  && toml_tool_libexec_dir="/usr/libexec/$toml_tool_name";
+
+else	# Check for the other files in the same dir as the tool (repo/source project.)
+    [[ -d "${toml_tool_bin_dir}/lib" ]]  && toml_tool_lib_dir="$toml_tool_bin_dir/lib"
+    [[ -d "${toml_tool_bin_dir}/libexec" ]]  && toml_tool_libexec_dir="$toml_tool_bin_dir/libexec";
 fi
 
+# Warn the user if no lib or libexec directories. This might be intented so we wont call it an error.
+[[ -z  "$toml_tool_lib_dir" ]] && { echo -e "\e[33m[warn] unable to find 'lib/' dir\e[0m"; }
+[[ -z  "$toml_tool_libexec_dir" ]] && { echo -e "\e[33munable to find 'libexec/' dir\e[0m"; }
 
 # Pull in the tool libraries.
-source "$TOML_LIB_DIR/toml_lib.bash"
+source "${toml_tool_lib_dir}/internal/toml_err.bash"
 
+## and that is how you can source the files for tools that will rely on other files elsewhere.
+## If there is a better way id be happy to know. 
+## End of Section
+
+toml_command=""			# The command that will be run.
 
 _toml_main_valid_command() {
     case "$1" in
@@ -33,10 +53,13 @@ Usage:
   installer <command> [args]
 
 Commands:
-  install     Install a tool
-  remove      Remove a tool
-  update      Update a tool from a repo
-  help        Show this help message
+  install			Install a tool
+  remove			Remove a tool
+  update			Update a tool from a repo
+  help				Show this help message
+  check				Used to check for info in a toml file.
+  read				Used to pull info from a toml file.
+  write				Used to write info to the toml file.	
 EOF
 }
 
@@ -48,15 +71,15 @@ _toml_main_parse_args() {
 
     case "$1" in
         -h|--help|help)
-            COMMAND="help"
-            shift
+	    _toml_main_usage
+	    exit 0
             ;;
         *)
             if _toml_main_valid_command "$1"; then
                 COMMAND="$1"
                 shift
             else
-                printf '[Error]: unknown command: %s\n' "$1" >&2
+                printf '\e[31m[Error]\e[0m: unknown command: %s\n' "$1" >&2
                 _toml_main_usage
                 exit 1
             fi
@@ -68,3 +91,10 @@ _toml_main_parse_args() {
 
 
 _toml_main_parse_args "$@"
+
+case "$COMMAND" in
+    "check") bash "${toml_tool_libexec_dir}/toml_check" "${ARGS[@]}";;
+    "read") bash "${toml_tool_libexec_dir}/toml_read" "${ARGS[@]}";;
+    "write") bash "${toml_tool_libexec_dir}/toml_write" "${ARGS[@]}";;
+    *) toml_error "Unknown command read please try again with --help";;
+esac

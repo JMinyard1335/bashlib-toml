@@ -1,0 +1,176 @@
+#!/usr/bin/env bash
+# CLI wrapper for toml_check library functions.
+
+# SOURCE GUARD FOR LIBRARY LOADING
+if [[ -v toml_cli_read_sourced ]]; then
+    return 0
+fi
+toml_cli_read_sourced=1
+
+# Name of the main tool
+toml_tool_name="toml"
+toml_cli_read_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+toml_tool_bin_dir=""
+toml_tool_lib_dir=""
+
+# Resolve install/dev paths
+if [[ "${toml_cli_read_dir}" == "${HOME}/.local/libexec/${toml_tool_name}" ]]; then
+    [[ -d "${HOME}/.local/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="${HOME}/.local/lib/${toml_tool_name}"
+    [[ -d "${HOME}/.local/bin" ]] && toml_tool_bin_dir="${HOME}/.local/bin"
+
+elif [[ "${toml_cli_read_dir}" == "/usr/libexec/${toml_tool_name}" ]]; then
+    [[ -d "/usr/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="/usr/lib/${toml_tool_name}"
+    [[ -d "/usr/bin" ]] && toml_tool_bin_dir="/usr/bin"
+
+else
+    [[ -d "${toml_cli_read_dir}/../lib" ]] && toml_tool_lib_dir="${toml_cli_read_dir}/../lib"
+    [[ -d "${toml_cli_read_dir}/../" ]] && toml_tool_bin_dir="${toml_cli_read_dir}/../" 
+fi
+
+# Load libraries
+source "${toml_tool_lib_dir}/internal/toml_err.bash"
+source "${toml_tool_lib_dir}/internal/toml_read.bash"
+source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
+
+toml_read_version="0.1.0"
+
+toml_table=""
+toml_key=""
+toml_file=""
+
+toml_check_usage() {
+    cat <<EOF
+Usage:
+  toml-check [opts] <file>
+
+Options:
+  -h, --help, help			Show this help message
+  -v, --version				Print the version of this subcommand
+  -t, --table <table>		Check that a table exists
+  -k, --key <key>			Check that a key exists
+							If --table is also given, check inside that table
+  -e, --error <value>		prints out the error message for a given code
+
+Examples:
+  toml-read config.toml
+  toml-read -t foo config.toml
+  toml-read -k bar config.toml
+  toml-read -k bar -t foo config.toml
+  toml-read -t foo -k bar config.toml
+EOF
+}
+
+toml_read_parse_args() {
+    toml_table=""
+    toml_key=""
+    toml_file=""
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -h|--help|help)
+                toml_check_usage
+                exit 0
+                ;;
+
+            -v|--version)
+                echo "Toml Read Version: $toml_read_version"
+                exit 0
+                ;;
+
+	    -e|--error)
+		if [[ -z "${2:-}" ]]; then
+		    toml_error "--error requires an argument"
+		    exit "$TOML_INVALID_ARGS"
+		fi
+		toml_err_to_str "$2"
+		exit 0
+		;;
+
+	    -t|--table)
+		if [[ -z "${2:-}" ]]; then
+                    toml_error "--table requires an argument"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_table="$2"
+                shift 2
+                ;;
+
+            -k|--key)
+                if [[ -z "${2:-}" ]]; then
+                    toml_error "--key requires an argument"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_key="$2"
+                shift 2
+                ;;
+
+            --)
+                shift
+                while [[ "$#" -gt 0 ]]; do
+                    if [[ -n "$toml_file" ]]; then
+                        toml_error "Only one file may be provided"
+                        return "$TOML_INVALID_ARGS"
+                    fi
+                    toml_file="$1"
+                    shift
+                done
+                ;;
+
+            -*)
+                toml_error "Unknown option: $1"
+                return "$TOML_INVALID_ARGS"
+                ;;
+
+            *)
+                if [[ -n "$toml_file" ]]; then
+                    toml_error "Only one file may be provided"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_file="$1"
+                shift
+                ;;
+        esac
+    done
+
+    if [[ -z "$toml_file" ]]; then
+        toml_error "A TOML file is required"
+	toml_check_usage
+        exit "$TOML_INVALID_ARGS"
+    fi
+
+    return "$TOML_SUCCESS"
+}
+
+
+toml_read_main() {
+    local status=""
+    
+    toml_read_parse_args "$@"
+    if [[ -n "$toml_table" && -n "$toml_key" ]]; then
+	toml_read_key "$toml_file" "$toml_table" "$toml_key"
+	status="$?"
+	exit "$status"
+	
+    elif [[ -n "$toml_key" && -z "$toml_table" ]]; then
+	 toml_log "Not currently implemented"
+	 toml_log "TODO: implement a function in lib/toml_read.bash"
+	 toml_log "which will print out every instance of a key regardless of table"
+	 exit "$status"
+	 
+    elif [[ -n "$toml_table" && -z "$toml_key" ]]; then
+	toml_read_table "$toml_file" "$toml_table"
+	status="$?"
+	exit "$status"
+	
+    else
+	[[ -z "$toml_file" ]] && { echo "wow how did we get this far with no toml file? weird..."; exit 1; }
+	toml_read_file "$toml_file"
+	status="$?"
+        exit "$status"
+    fi
+}
+
+# only run main when executed, not sourced
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    toml_read_main "$@"
+fi

@@ -1,0 +1,190 @@
+#!/usr/bin/env bash
+# CLI wrapper for toml_check library functions.
+
+# SOURCE GUARD DO NOT REMOVE -------------------------------------------------------------
+if [[ -v toml_cli_check_sourced ]]; then
+    return 0
+fi
+toml_cli_check_sourced=1
+## SOURCE GUARD END ----------------------------------------------------------------------
+
+
+## LIB DISCOVERY -------------------------------------------------------------------------
+## DO NOT REMOVE THIS SECTION
+## this section is used to help this tool find and access the libraries it needs
+## based on its location on the system
+## this will account for the following Linux convention of install locations
+##
+## - /usr/{bin, lib, libexec}
+## - $HOME/.local/{bin, lib, libexec}
+##
+## or you can also have a project structure with a {lib, libexec, bin} dirs
+## all in the root of the project. 
+toml_tool_name="toml"
+toml_cli_check_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+toml_tool_lib_dir=""
+
+# Resolve install/dev paths
+if [[ "${toml_cli_check_dir}" == "${HOME}/.local/libexec/${toml_tool_name}" ]]; then
+    [[ -d "${HOME}/.local/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="${HOME}/.local/lib/${toml_tool_name}"
+
+elif [[ "${toml_cli_check_dir}" == "/usr/libexec/${toml_tool_name}" ]]; then
+    [[ -d "/usr/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="/usr/lib/${toml_tool_name}"
+
+else
+    [[ -d "${toml_cli_check_dir}/../lib" ]] && toml_tool_lib_dir="$(cd -- "${toml_cli_check_dir}/../lib" && pwd)"
+fi
+
+## ---------------------------------------------------------------------------------------
+
+# Load libraries
+# these are sourced using the lib dir found in the above section.
+source "${toml_tool_lib_dir}/internal/toml_err.bash"
+source "${toml_tool_lib_dir}/internal/toml_check.bash"
+source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
+
+toml_check_version="0.1.0"
+
+toml_table=""
+toml_key=""
+toml_file=""
+
+toml_check_usage() {
+    cat <<EOF
+Usage:
+  toml-check [opts] <file>
+
+Options:
+  -h, --help, help			Show this help message
+  -v, --version				Print the version of this subcommand
+  -t, --table <table>		Check that a table exists
+  -k, --key <key>			Check that a key exists
+							If --table is also given, check inside that table
+  -e, --error <value>		prints out the error message for a given code
+
+Examples:
+  toml-check config.toml
+  toml-check -t foo config.toml
+  toml-check -k bar config.toml
+  toml-check -k bar -t foo config.toml
+  toml-check -t foo -k bar config.toml
+EOF
+}
+
+toml_check_parse_args() {
+    toml_table=""
+    toml_key=""
+    toml_file=""
+
+    while [[ "$#" -gt 0 ]]; do
+        case "$1" in
+            -h|--help|help)
+                toml_check_usage
+                exit 0
+                ;;
+
+            -v|--version)
+                echo "Toml Check Version: $toml_check_version"
+                exit 0
+                ;;
+
+	    -e|--error)
+		if [[ -z "${2:-}" ]]; then
+		    toml_error "--error requires an argument"
+		    exit "$TOML_INVALID_ARGS"
+		fi
+		toml_err_to_str "$2"
+		exit 0
+		;;
+
+	    -t|--table)
+		if [[ -z "${2:-}" ]]; then
+                    toml_error "--table requires an argument"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_table="$2"
+                shift 2
+                ;;
+
+            -k|--key)
+                if [[ -z "${2:-}" ]]; then
+                    toml_error "--key requires an argument"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_key="$2"
+                shift 2
+                ;;
+
+            --)
+                shift
+                while [[ "$#" -gt 0 ]]; do
+                    if [[ -n "$toml_file" ]]; then
+                        toml_error "Only one file may be provided"
+                        return "$TOML_INVALID_ARGS"
+                    fi
+                    toml_file="$1"
+                    shift
+                done
+                ;;
+
+            -*)
+                toml_error "Unknown option: $1"
+                return "$TOML_INVALID_ARGS"
+                ;;
+
+            *)
+                if [[ -n "$toml_file" ]]; then
+                    toml_error "Only one file may be provided"
+                    return "$TOML_INVALID_ARGS"
+                fi
+                toml_file="$1"
+                shift
+                ;;
+        esac
+    done
+
+    if [[ -z "$toml_file" ]]; then
+        toml_error "A TOML file is required"
+	toml_check_usage
+        exit "$TOML_INVALID_ARGS"
+    fi
+
+    return "$TOML_SUCCESS"
+}
+
+
+toml_check_main() {
+    local status=""
+    
+    toml_check_parse_args "$@"
+    if [[ -n "$toml_table" && -n "$toml_key" ]]; then
+	toml_check_key "$toml_file" "$toml_table" "$toml_key"
+	status="$?"
+	[[ "$status" -eq 0 ]] && toml_success "result = $status" || toml_error "result = $status"
+	exit "$status"
+	
+    elif [[ -n "$toml_key" && -z "$toml_table" ]]; then
+	toml_check_key_all "$toml_file" "$toml_key"
+	status="$?"
+	[[ "$status" -eq 0 ]] && toml_success "result = $status" || toml_error "result = $status"
+	 exit "$status"
+	 
+    elif [[ -n "$toml_table" && -z "$toml_key" ]]; then
+	toml_check_table "$toml_file" "$toml_table"
+	status="$?"
+	[[ "$status" -eq 0 ]] && toml_success "result = $status" || toml_error "result = $status"
+	exit "$status"
+	
+    else
+	[[ -z "$toml_file" ]] && { echo "wow how did we get this far with no toml file? weird..."; exit 1;}
+	toml_check_file "$toml_file"
+	status="$?"
+	[[ "$status" -eq 0 ]] && toml_success "result = $status" || toml_error "result = $status"
+        exit "$status"
+    fi
+}
+
+# only run main when executed, not sourced
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then
+    toml_check_main "$@"
+fi
