@@ -27,13 +27,15 @@ else	# Check for the other files in the same dir as the tool (repo/source projec
     [[ -d "${toml_tool_bin_dir}/libexec" ]]  && toml_tool_libexec_dir="$toml_tool_bin_dir/libexec";
 fi
 
-# Warn the user if no lib or libexec directories. This might be intented so we wont call it an error.
-[[ -z  "$toml_tool_lib_dir" ]] && { echo -e "\e[33m[warn] unable to find 'lib/' dir\e[0m"; }
-[[ -z  "$toml_tool_libexec_dir" ]] && { echo -e "\e[33munable to find 'libexec/' dir\e[0m"; }
 
 # Pull in the tool libraries.
 source "${toml_tool_lib_dir}/internal/toml_err.bash"
 source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
+source "${toml_tool_lib_dir}/source_externs.bash"
+
+if ! source_style; then
+    echo "Failed to source Style properly"
+fi
 
 ## and that is how you can source the files for tools that will rely on other files elsewhere.
 ## If there is a better way id be happy to know. 
@@ -48,35 +50,34 @@ _toml_main_valid_command() {
     esac
 }
 
+_toml_main_usage_style() {
+    helpmenu_print_title "Toml"
+    helpmenu_print_subtitle "A bash CLI tool for reading toml"
+    helpmenu_print_header "Usage"
+    helpmenu_print_option "toml <command> <args>" ""
+    helpmenu_print_header "Commands"
+    helpmenu_print_option "install" "Installs this tool to the system"
+    helpmenu_print_option "remove" "removes this tool from the system"
+    helpmenu_print_option "update" "updates this tool from its repo"
+    helpmenu_print_option "check" "checks if something exists in a toml file"
+    helpmenu_print_option "read" "reads values from a toml file"
+    helpmenu_print_header "Examples"
+}
+
 _toml_main_usage() {
-    cat <<EOF
-
-Description:
-  Used to read and check data In a toml file. There were plans
-  to also add a write but just open a text editor.
-
-Usage:
-  installer <command> [args]
-
-Commands:
-  install			Install a tool
-  remove			Remove a tool
-  update			Update a tool from a repo
-  help				Show this help message
-  check				Used to check for info in a toml file.
-  read				Used to pull info from a toml file.
-EOF
+    return 1
+    
 }
 
 _toml_main_parse_args() {
     [[ $# -eq 0 ]] && {
-        _toml_main_usage
+        _toml_main_usage_style
         exit 1
     }
 
     case "$1" in
         -h|--help|help)
-	    _toml_main_usage
+	    _toml_main_usage_style
 	    exit 0
             ;;
         *)
@@ -85,7 +86,7 @@ _toml_main_parse_args() {
                 shift
             else
                 printf '\e[31m[Error]\e[0m: unknown command: %s\n' "$1" >&2
-                _toml_main_usage
+                _toml_main_usage_style
                 exit 1
             fi
             ;;
@@ -130,7 +131,7 @@ toml_cli_update() {
 	exit 1
     fi
 
-    installer  update "$toml_tool_name"
+    installer update "$toml_tool_name"
 }
 
 toml_cli_remove() {

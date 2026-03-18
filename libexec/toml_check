@@ -50,25 +50,22 @@ toml_key=""
 toml_file=""
 
 toml_check_usage() {
-    cat <<EOF
-Usage:
-  toml-check [opts] <file>
-
-Options:
-  -h, --help, help			Show this help message
-  -v, --version				Print the version of this subcommand
-  -t, --table <table>		Check that a table exists
-  -k, --key <key>			Check that a key exists
-							If --table is also given, check inside that table
-  -e, --error <value>		prints out the error message for a given code
-
-Examples:
-  toml-check config.toml
-  toml-check -t foo config.toml
-  toml-check -k bar config.toml
-  toml-check -k bar -t foo config.toml
-  toml-check -t foo -k bar config.toml
-EOF
+    style menu -t "Toml Check"
+    style menu -s "Check values in a toml file"
+    style menu -H "Usage"
+    style menu -o "toml-check [opts] <file>" -d ""
+    style menu -H "Options"
+    style menu -o "-h, --help, help" -d "Show this help message"
+    style menu -o "-v, --version" -d "Print the version of this subcommand"
+    style menu -o "-t, --table <table>" -d "Check that a table exists"
+    style menu -o "-k, --key <key>" -d "Check that a key exists"
+    style menu -o "-e, --error <value>" -d "Print the error message for a given code"
+    style menu -H "Examples"
+    style menu -e "toml-check" -a "config.toml"
+    style menu -e "toml-check" -a "-t foo config.toml"
+    style menu -e "toml-check" -a "-k bar config.toml"
+    style menu -e "toml-check" -a "-k bar -t foo config.toml"
+    style menu -e "toml-check" -a "-t foo -k bar config.toml"
 }
 
 toml_check_parse_args() {

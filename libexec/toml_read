@@ -39,25 +39,21 @@ toml_key=""
 toml_file=""
 
 toml_check_usage() {
-    cat <<EOF
-Usage:
-  toml-check [opts] <file>
-
-Options:
-  -h, --help, help			Show this help message
-  -v, --version				Print the version of this subcommand
-  -t, --table <table>		Check that a table exists
-  -k, --key <key>			Check that a key exists
-							If --table is also given, check inside that table
-  -e, --error <value>		prints out the error message for a given code
-
-Examples:
-  toml-read config.toml
-  toml-read -t foo config.toml
-  toml-read -k bar config.toml
-  toml-read -k bar -t foo config.toml
-  toml-read -t foo -k bar config.toml
-EOF
+    style menu -t "Toml Read"
+    style menu -s "Read values from a toml file"
+    style menu -H "Usage"
+    style menu -o "toml-read [opts] <file>" -d ""
+    style menu -H "Options"
+    style menu -o "-h, --help, help" -d "Show this help message"
+    style menu -o "-v, --version" -d "Print the version of this subcommand"
+    style menu -o "-t, --table <table>" -d "Read from a specific table"
+    style menu -o "-k, --key <key>" -d "Read a specific key (use with --table for nested)"
+    style menu -H "Examples"
+    style menu -e "toml-read" -a "config.toml"
+    style menu -e "toml-read" -a "-t foo config.toml"
+    style menu -e "toml-read" -a "-k bar config.toml"
+    style menu -e "toml-read" -a "-k bar -t foo config.toml"
+    style menu -e "toml-read" -a "-t foo -k bar config.toml"
 }
 
 toml_read_parse_args() {
