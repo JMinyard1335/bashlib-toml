@@ -1,12 +1,8 @@
 [project]
-name="bashlib toml"		# Name of the project
-author="Jachin Minyard"		# Author of the project
-tool="toml"			# name of the tool script
-include="bashlib_toml"		# name of the include library file.
-repo=""				# The projects repo
+name="bashlib toml"
+author="Jachin Minyard"
+tool="toml"		
+repo="https://github.com/JMinyard1335/bashlib-toml.git"
 
-[dirs]
-bin="bin"
-lib="lib"
-libexec="libexec"
-man="man"
+[dependencies]
+style="https://github.com/JMinyard1335/bashlib-style.git"
