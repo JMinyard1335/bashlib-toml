@@ -31,6 +31,11 @@ fi
 source "${toml_tool_lib_dir}/internal/toml_err.bash"
 source "${toml_tool_lib_dir}/internal/toml_read.bash"
 source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
+source "${toml_tool_lib_dir}/cli_helpers/source_externs.bash"
+
+if ! source_style; then
+    echo "Failed to source Style properly"
+fi
 
 toml_read_version="0.1.0"
 
@@ -38,22 +43,56 @@ toml_table=""
 toml_key=""
 toml_file=""
 
-toml_check_usage() {
-    style menu -t "Toml Read"
-    style menu -s "Read values from a toml file"
-    style menu -H "Usage"
-    style menu -o "toml-read [opts] <file>" -d ""
-    style menu -H "Options"
-    style menu -o "-h, --help, help" -d "Show this help message"
-    style menu -o "-v, --version" -d "Print the version of this subcommand"
-    style menu -o "-t, --table <table>" -d "Read from a specific table"
-    style menu -o "-k, --key <key>" -d "Read a specific key (use with --table for nested)"
-    style menu -H "Examples"
-    style menu -e "toml-read" -a "config.toml"
-    style menu -e "toml-read" -a "-t foo config.toml"
-    style menu -e "toml-read" -a "-k bar config.toml"
-    style menu -e "toml-read" -a "-k bar -t foo config.toml"
-    style menu -e "toml-read" -a "-t foo -k bar config.toml"
+toml_read_usage_style() {
+        helpmenu_print_title "Toml Read"
+        helpmenu_print_subtitle "Read values from a TOML file"
+        helpmenu_print_header "Usage"
+        helpmenu_print_option "toml read [opts] <file>" ""
+        helpmenu_print_header "Options"
+        helpmenu_print_option "-h, --help, help" "Show this help message"
+        helpmenu_print_option "-v, --version" "Print the version of this subcommand"
+        helpmenu_print_option "-t, --table <table>" "Read from a specific table"
+        helpmenu_print_option "-k, --key <key>" "Read a specific key (use with --table for nested)"
+        helpmenu_print_option "-e, --error <value>" "Print the error message for a given code"
+        helpmenu_print_header "Examples"
+        helpmenu_print_example "toml" "read config.toml"
+        helpmenu_print_example "toml" "read -t foo config.toml"
+        helpmenu_print_example "toml" "read -k bar config.toml"
+        helpmenu_print_example "toml" "read -k bar -t foo config.toml"
+        helpmenu_print_example "toml" "read -t foo -k bar config.toml"
+}
+
+toml_read_usage() {
+    cat <<'EOF'
+Toml Read
+Read values from a TOML file
+
+Usage:
+    toml read [opts] <file>
+
+Options:
+    -h, --help, help            Show this help message
+    -v, --version               Print the version of this subcommand
+    -t, --table <table>         Read from a specific table
+    -k, --key <key>             Read a specific key (use with --table for nested)
+    -e, --error <value>         Print the error message for a given code
+
+Examples:
+    toml read config.toml
+    toml read -t foo config.toml
+    toml read -k bar config.toml
+    toml read -k bar -t foo config.toml
+    toml read -t foo -k bar config.toml
+EOF
+}
+
+
+toml_read_show_usage() {
+    if command -v style >/dev/null 2>&1; then
+        toml_read_usage_style
+    else
+        toml_read_usage
+    fi
 }
 
 toml_read_parse_args() {
@@ -64,7 +103,7 @@ toml_read_parse_args() {
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
             -h|--help|help)
-                toml_check_usage
+                toml_read_show_usage
                 exit 0
                 ;;
 
@@ -130,7 +169,7 @@ toml_read_parse_args() {
 
     if [[ -z "$toml_file" ]]; then
         toml_error "A TOML file is required"
-	toml_check_usage
+	toml_read_show_usage
         exit "$TOML_INVALID_ARGS"
     fi
 

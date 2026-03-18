@@ -7,8 +7,8 @@
 # Sources the style libraries.
 # Check the return code to see if anything was sourced
 source_style() {
-    if ! which style; then
-	return 1
+    if ! command -v style >/dev/null 2>&1; then
+	    return 1
     fi
     [[ -d "$HOME/.local/lib/style" ]] && { source "$HOME/.local/lib/style/bashlib_style.bash" || return 1; }
     [[ -d "/usr/local/lib/style" ]] && ( source "/usr/local/lib/style/bashlib_style.bash" || return 1; )

@@ -27,10 +27,8 @@ toml_tool_lib_dir=""
 # Resolve install/dev paths
 if [[ "${toml_cli_check_dir}" == "${HOME}/.local/libexec/${toml_tool_name}" ]]; then
     [[ -d "${HOME}/.local/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="${HOME}/.local/lib/${toml_tool_name}"
-
 elif [[ "${toml_cli_check_dir}" == "/usr/libexec/${toml_tool_name}" ]]; then
     [[ -d "/usr/lib/${toml_tool_name}" ]] && toml_tool_lib_dir="/usr/lib/${toml_tool_name}"
-
 else
     [[ -d "${toml_cli_check_dir}/../lib" ]] && toml_tool_lib_dir="$(cd -- "${toml_cli_check_dir}/../lib" && pwd)"
 fi
@@ -42,6 +40,11 @@ fi
 source "${toml_tool_lib_dir}/internal/toml_err.bash"
 source "${toml_tool_lib_dir}/internal/toml_check.bash"
 source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
+source "${toml_tool_lib_dir}/cli_helpers/source_externs.bash"
+
+if ! source_style; then
+    echo "Failed to source Style properly"
+fi
 
 toml_check_version="0.1.0"
 
@@ -49,23 +52,55 @@ toml_table=""
 toml_key=""
 toml_file=""
 
+toml_check_usage_style() {
+        helpmenu_print_title "Toml Check"
+        helpmenu_print_subtitle "Check values in a TOML file"
+        helpmenu_print_header "Usage"
+        helpmenu_print_option "toml check [opts] <file>" ""
+        helpmenu_print_header "Options"
+        helpmenu_print_option "-h, --help, help" "Show this help message"
+        helpmenu_print_option "-v, --version" "Print the version of this subcommand"
+        helpmenu_print_option "-t, --table <table>" "Check that a table exists"
+        helpmenu_print_option "-k, --key <key>" "Check that a key exists"
+        helpmenu_print_option "-e, --error <value>" "Print the error message for a given code"
+        helpmenu_print_header "Examples"
+        helpmenu_print_example "toml" "check config.toml"
+        helpmenu_print_example "toml" "check -t foo config.toml"
+        helpmenu_print_example "toml" "check -k bar config.toml"
+        helpmenu_print_example "toml" "check -k bar -t foo config.toml"
+        helpmenu_print_example "toml" "check -t foo -k bar config.toml"
+}
+
 toml_check_usage() {
-    style menu -t "Toml Check"
-    style menu -s "Check values in a toml file"
-    style menu -H "Usage"
-    style menu -o "toml-check [opts] <file>" -d ""
-    style menu -H "Options"
-    style menu -o "-h, --help, help" -d "Show this help message"
-    style menu -o "-v, --version" -d "Print the version of this subcommand"
-    style menu -o "-t, --table <table>" -d "Check that a table exists"
-    style menu -o "-k, --key <key>" -d "Check that a key exists"
-    style menu -o "-e, --error <value>" -d "Print the error message for a given code"
-    style menu -H "Examples"
-    style menu -e "toml-check" -a "config.toml"
-    style menu -e "toml-check" -a "-t foo config.toml"
-    style menu -e "toml-check" -a "-k bar config.toml"
-    style menu -e "toml-check" -a "-k bar -t foo config.toml"
-    style menu -e "toml-check" -a "-t foo -k bar config.toml"
+        cat <<'EOF'
+Toml Check
+Check values in a TOML file
+
+Usage:
+    toml check [opts] <file>
+
+Options:
+    -h, --help, help            Show this help message
+    -v, --version               Print the version of this subcommand
+    -t, --table <table>         Check that a table exists
+    -k, --key <key>             Check that a key exists
+    -e, --error <value>         Print the error message for a given code
+
+Examples:
+    toml check config.toml
+    toml check -t foo config.toml
+    toml check -k bar config.toml
+    toml check -k bar -t foo config.toml
+    toml check -t foo -k bar config.toml
+EOF
+}
+
+toml_check_show_usage() {
+    if command -v style >/dev/null 2>&1; then
+        toml_check_usage_style
+    else
+        toml_check_usage
+    fi
 }
 
 toml_check_parse_args() {
@@ -76,7 +111,7 @@ toml_check_parse_args() {
     while [[ "$#" -gt 0 ]]; do
         case "$1" in
             -h|--help|help)
-                toml_check_usage
+                toml_check_show_usage
                 exit 0
                 ;;
 
@@ -142,7 +177,7 @@ toml_check_parse_args() {
 
     if [[ -z "$toml_file" ]]; then
         toml_error "A TOML file is required"
-	toml_check_usage
+	    toml_check_show_usage
         exit "$TOML_INVALID_ARGS"
     fi
 

@@ -31,10 +31,15 @@ fi
 # Pull in the tool libraries.
 source "${toml_tool_lib_dir}/internal/toml_err.bash"
 source "${toml_tool_lib_dir}/internal/toml_helpers.bash"
-source "${toml_tool_lib_dir}/source_externs.bash"
+source "${toml_tool_lib_dir}/cli_helpers/source_externs.bash"
 
-if ! source_style; then
-    echo "Failed to source Style properly"
+toml_style_help_available=0
+if source_style >/dev/null 2>&1 && \
+   declare -F helpmenu_print_title >/dev/null 2>&1 && \
+   declare -F helpmenu_print_subtitle >/dev/null 2>&1 && \
+   declare -F helpmenu_print_header >/dev/null 2>&1 && \
+   declare -F helpmenu_print_option >/dev/null 2>&1; then
+    toml_style_help_available=1
 fi
 
 ## and that is how you can source the files for tools that will rely on other files elsewhere.
@@ -62,22 +67,60 @@ _toml_main_usage_style() {
     helpmenu_print_option "check" "checks if something exists in a toml file"
     helpmenu_print_option "read" "reads values from a toml file"
     helpmenu_print_header "Examples"
+    helpmenu_print_example "toml check " "tool.toml"
+    helpmenu_print_example "toml check " "-t project tool.toml"
+    helpmenu_print_example "toml check " "-t project -k tool tool.toml"
+    helpmenu_print_example "toml read " "tool.toml"
+    helpmenu_print_example "toml read " "-t project tool.toml"
+    helpmenu_print_example "toml read " "-t project -k tool tool.toml"
+    helpmenu_print_example "toml read " "--help"
 }
 
 _toml_main_usage() {
-    return 1
+    cat <<'EOF'
+Toml
+A bash CLI tool for reading toml
+
+Usage:
+    toml <command> <args>
+
+Commands:
+    install                     Installs this tool to the system
+    remove                      Removes this tool from the system
+    update                      Updates this tool from its repo
+    check                       Checks if something exists in a toml file
+    read                        Reads values from a toml file
+
+Examples:
+    toml check tool.toml
+    toml check -t project tool.toml
+    toml check -t project -k tool tool.toml
+    toml read tool.toml
+    toml read -t project tool.toml
+    toml read -t project -k tool tool.toml
+    toml read --help
+EOF
+        return 0
     
+}
+
+_toml_main_print_usage() {
+    if [[ "$toml_style_help_available" -eq 1 ]]; then
+        _toml_main_usage_style
+    else
+        _toml_main_usage
+    fi
 }
 
 _toml_main_parse_args() {
     [[ $# -eq 0 ]] && {
-        _toml_main_usage_style
+        _toml_main_print_usage
         exit 1
     }
 
     case "$1" in
         -h|--help|help)
-	    _toml_main_usage_style
+	    _toml_main_print_usage
 	    exit 0
             ;;
         *)
@@ -86,7 +129,7 @@ _toml_main_parse_args() {
                 shift
             else
                 printf '\e[31m[Error]\e[0m: unknown command: %s\n' "$1" >&2
-                _toml_main_usage_style
+                _toml_main_print_usage
                 exit 1
             fi
             ;;
